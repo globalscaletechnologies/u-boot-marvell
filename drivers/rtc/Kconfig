@@ -42,4 +42,10 @@ config RTC_S35392A
 	help
 	  Enable s35392a driver which provides rtc get and set function.
 
+config RTC_PCF8563
+	bool "Enable PCF8563 driver"
+	depends on DM_RTC
+	help
+	  PCF8563 RTC chip driver.
+
 endmenu
