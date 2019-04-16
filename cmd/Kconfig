@@ -657,6 +657,13 @@ config CMD_CACHE
 	help
 	  Enable the "icache" and "dcache" commands
 
+config CMD_DATE
+	bool "date"
+	default y if DM_RTC
+	help
+	  Enable the 'date' command for getting/setting the time/date in RTC
+	  devices.
+
 config CMD_TIME
 	bool "time"
 	help
