@@ -126,9 +126,6 @@ static int board_comphy_usb3_sata_mux(enum COMPHY_LANE2_MUXING comphy_mux)
 
 int board_early_init_f(void)
 {
-#ifdef CONFIG_BOARD_CONFIG_EEPROM
-	cfg_eeprom_init();
-#endif
 	return 0;
 }
 
@@ -137,6 +134,9 @@ int board_init(void)
 	/* adress of boot parameters */
 	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
 
+#ifdef CONFIG_BOARD_CONFIG_EEPROM
+	cfg_eeprom_init();
+#endif
 	/* enable serdes lane 2 mux for sata phy */
 	board_comphy_usb3_sata_mux(COMPHY_LANE2_MUX_SATA);
 

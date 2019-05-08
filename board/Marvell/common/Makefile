@@ -5,5 +5,12 @@
 # https://spdx.org/licenses
 #
 
-obj-$(CONFIG_BOARD_CONFIG_EEPROM)	+= cfg_eeprom.o
+ifeq ($(CONFIG_BOARD_CONFIG_EEPROM), y)
+  ifeq ($(CONFIG_BOARD_CONFIG_EEPROM_FLASH), y)
+    obj-$(CONFIG_BOARD_CONFIG_EEPROM_FLASH)	+= cfg_eeprom_sf.o
+  else
+    obj-$(CONFIG_BOARD_CONFIG_EEPROM)	+= cfg_eeprom.o
+  endif
+endif
+
 obj-$(CONFIG_MVEBU_SAR)	+= sar.o
