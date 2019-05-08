@@ -46,4 +46,12 @@
 #define CONFIG_CMD_PCI
 #endif
 
+
+#undef BOOT_TARGET_DEVICES
+#undef BOOTENV
+#define BOOTENV 				"\0"
+
+#undef CONFIG_BOOTCOMMAND
+#define CONFIG_BOOTCOMMAND		"run bootcmd_nfs"
+
 #endif /* _CONFIG_MVEBU_ARMADA_37XX_H */
