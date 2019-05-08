@@ -296,6 +296,7 @@ U_BOOT_CMD(
 	"\tpcb_sn        PCB SN\n"
 	"\tethaddr       first MAC address\n"
 	"\teth1addr      second MAC address\n"
+#ifndef CONFIG_TARGET_MVEBU_ARMADA_37XX
 	"\teth2addr      third MAC address\n"
 	"\teth3addr      fourth MAC address\n"
 	"\teth4addr      fifth MAC address\n"
@@ -304,4 +305,5 @@ U_BOOT_CMD(
 	"\teth7addr      eighth MAC address\n"
 	"\teth8addr      ninth MAC address\n"
 	"\teth9addr      tenth MAC address\n"
+#endif
 );

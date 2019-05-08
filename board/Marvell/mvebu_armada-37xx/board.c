@@ -95,10 +95,6 @@ static int board_comphy_usb3_sata_mux(enum COMPHY_LANE2_MUXING comphy_mux)
 
 int board_early_init_f(void)
 {
-#ifdef CONFIG_BOARD_CONFIG_EEPROM
-	cfg_eeprom_init();
-#endif
-
 #ifdef CONFIG_MVEBU_SYS_INFO
 	/*
 	 * Call this function to transfer data from address 0x4000000
@@ -165,6 +161,9 @@ int board_init(void)
 	printf("U-Boot DT blob at : %p\n", gd->fdt_blob);
 #endif
 
+#ifdef CONFIG_BOARD_CONFIG_EEPROM
+	cfg_eeprom_init();
+#endif
 	/* enable serdes lane 2 mux for sata phy */
 	board_comphy_usb3_sata_mux(COMPHY_LANE2_MUX_SATA);
 
