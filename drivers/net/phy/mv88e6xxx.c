@@ -412,6 +412,22 @@ int mv88e6xxx_initialize(const void *blob)
 					     PHY_COPPER_CONTROL_SPEED_1G |
 					     PHY_COPPER_CONTROL_DUPLEX |
 					     PHY_COPPER_CONTROL_AUTO_NEG_EN);
+
+		if (((soho_dev.id >> 4) == PORT_SWITCH_ID_PROD_NUM_6341) ||
+			((soho_dev.id >> 4) == PORT_SWITCH_ID_PROD_NUM_6141)) {
+			if (port == 0) {
+				/* Map switch port to external phy address */
+				mv88e6xxx_write_register(&soho_dev, REG_GLOBAL2,
+										 GLOBAL2_SMI_DATA, 0);
+				mv88e6xxx_write_register(&soho_dev, REG_GLOBAL2, GLOBAL2_SMI_OP,
+										 0xC400 | ((0x10 + port) & 0x1F));
+				/* Reset PPU */
+				mv88e6xxx_write_register(&soho_dev, REG_GLOBAL, 0x04, 0x1);
+				mv88e6xxx_write_register(&soho_dev, REG_PORT(5), 0x1A, 0xA42E);
+				mv88e6xxx_write_register(&soho_dev, REG_PORT(4), 0x1A, 0xC1E6);
+				mv88e6xxx_write_register(&soho_dev, REG_GLOBAL, 0x04, 0x4001);
+			}
+		}
 	}
 
 	soho_dev_handle = &soho_dev;
