@@ -46,12 +46,21 @@
 #define CONFIG_CMD_PCI
 #endif
 
-
 #undef BOOT_TARGET_DEVICES
 #undef BOOTENV
-#define BOOTENV 				"\0"
+#define BOOTENV 		\
+		"fdt_name=boot/" CONFIG_DEFAULT_DEVICE_TREE ".dtb\0"\
+		"image_name=boot/Image\0"\
+		"emmcboot=mmc dev 0; ext4load mmc 0:1 $kernel_addr_r $image_name;"\
+		"ext4load mmc 0:1 $fdt_addr_r $fdt_name;setenv bootargs $console "\
+		"root=/dev/mmcblk0p1 rw rootwait net.ifnames=0 biosdevname=0;"\
+		"booti $kernel_addr_r - $fdt_addr_r\0" \
+		"recovery=usb reset;"\
+		"fatload usb 0 $loadaddr recovery.bin; source $loadaddr\0"\
 
 #undef CONFIG_BOOTCOMMAND
-#define CONFIG_BOOTCOMMAND		"run bootcmd_nfs"
+#define CONFIG_BOOTCOMMAND		"run emmcboot"
+
+#undef CONFIG_GATEWAYIP
 
 #endif /* _CONFIG_MVEBU_ARMADA_37XX_H */
