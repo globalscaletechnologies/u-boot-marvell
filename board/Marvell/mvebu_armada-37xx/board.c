@@ -7,6 +7,9 @@
 #include <common.h>
 #include <dm.h>
 #include <i2c.h>
+#include <miiphy.h>
+#include <asm/io.h>
+#include <asm/gpio.h>
 #include <power/regulator.h>
 #ifdef CONFIG_BOARD_CONFIG_EEPROM
 #include <mvebu/cfg_eeprom.h>
@@ -192,3 +195,48 @@ int board_ahci_enable(struct udevice *dev)
 #endif
 	return 0;
 }
+
+#if defined(CONFIG_CMD_NET)
+
+#define MII_MARVELL_PHY_PAGE		22
+
+#define MV88E1512_GENERAL_CTRL		20
+#define MV88E1512_MODE_SGMII		1
+#define MV88E1512_RESET_OFFS		15
+
+#define CCPE_MV88E1512_PHYADDR		0x1
+
+void force_phy_88e1512_to_sgmii(u16 devaddr)
+{
+	const char *name;
+	u16 reg;
+
+	name = miiphy_get_current_dev();
+	if (name) {
+		/* SGMII-to-Copper mode initialization */
+
+		/* Select page 18 */
+		miiphy_write(name, devaddr, MII_MARVELL_PHY_PAGE, 0x12);
+		/* In reg 20, write MODE[2:0] = 0x1 (SGMII to Copper) */
+		miiphy_read(name, devaddr, MV88E1512_GENERAL_CTRL, &reg);
+		reg &= ~0x7;
+		reg |= MV88E1512_MODE_SGMII;
+		miiphy_write(name, devaddr, MV88E1512_GENERAL_CTRL, reg);
+		/* PHY reset is necessary after changing MODE[2:0] */
+		miiphy_read(name, devaddr, MV88E1512_GENERAL_CTRL, &reg);
+		reg |= 1 << MV88E1512_RESET_OFFS;
+		miiphy_write(name, devaddr, MV88E1512_GENERAL_CTRL, reg);
+		/* Reset page selection */
+		miiphy_write(name, devaddr, MII_MARVELL_PHY_PAGE, 0);
+		udelay(100);
+	}
+}
+
+int board_network_enable(struct mii_dev *bus)
+{
+	if (of_machine_is_compatible("gti,armada-3720-ccpe-r0")) {
+		force_phy_88e1512_to_sgmii(CCPE_MV88E1512_PHYADDR);
+	}
+	return 0;
+}
+#endif
