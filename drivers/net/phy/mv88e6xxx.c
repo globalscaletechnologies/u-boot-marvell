@@ -433,6 +433,31 @@ int mv88e6xxx_initialize(const void *blob)
 											 0x4001);
 				}
 			}
+			if (of_machine_is_compatible("gti,armada-3720-ccpe-r0")) {
+				if (port == 5) {
+					/* change port#5 CMODE to SGMII mode (0xA) */
+					mv88e6xxx_write_register(&soho_dev, REG_PORT(5), 0x1A,
+											 0xA100);
+					mv88e6xxx_write_register(&soho_dev, REG_PORT(4), 0x1A,
+											 0xDEA0);
+					mv88e6xxx_write_register(&soho_dev, REG_PORT(5),
+											 PORT_STATUS, 0x000A);
+
+					mv88e6xxx_write_register(&soho_dev, REG_PORT(5), 0x1A,
+											 0x0A02);
+					mv88e6xxx_write_register(&soho_dev, REG_PORT(4), 0x1A,
+											 0xDEA2);
+
+					mv88e6xxx_write_register(&soho_dev, REG_GLOBAL2,
+											 GLOBAL2_SMI_DATA, 0x2000);
+					mv88e6xxx_write_register(&soho_dev, REG_GLOBAL2,
+											 GLOBAL2_SMI_OP, 0x82A4);
+					mv88e6xxx_write_register(&soho_dev, REG_GLOBAL2,
+											 GLOBAL2_SMI_DATA, 0x1340);
+					mv88e6xxx_write_register(&soho_dev, REG_GLOBAL2,
+											 GLOBAL2_SMI_OP, 0x86A4);
+				}
+			}
 		}
 	}
 
