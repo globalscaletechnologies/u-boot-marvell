@@ -8,6 +8,7 @@
 #include <phy.h>
 #include <miiphy.h>
 #include <watchdog.h>
+#include <dm.h>
 #include <linux/compat.h>
 #include <linux/mbus.h>
 #include <fdtdec.h>
