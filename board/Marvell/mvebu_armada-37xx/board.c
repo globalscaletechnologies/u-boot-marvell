@@ -278,12 +278,8 @@ static int mii_multi_chip_mode_write(struct mii_dev *bus, int dev_smi_addr,
 	return 0;
 }
 
-/* Bring-up board-specific network stuff */
-int board_network_enable(struct mii_dev *bus)
+int board_network_enable_espressobin(struct mii_dev *bus)
 {
-	if (!of_machine_is_compatible("marvell,armada-3720-espressobin"))
-		return 0;
-
 	/*
 	 * FIXME: remove this code once Topaz driver gets available
 	 * A3720 Community Board Only
@@ -313,5 +309,70 @@ int board_network_enable(struct mii_dev *bus)
 	mii_multi_chip_mode_write(bus, 1, MVEBU_SW_G2_SMI_ADDR,
 				  MVEBU_G2_SMI_PHY_CMD_REG, 0x9660);
 
+	return 0;
+}
+
+int board_network_enable_ccpe(struct mii_dev *bus)
+{
+	int i;
+
+	/*
+	 * FIXME: remove this code once Topaz driver gets available
+	 * A3720 CCPE Board Only
+	 * Configure Topaz switch (88E6341)
+	 * Set port 1,2,3,4,5 to forwarding Mode (through Switch Port registers)
+	 */
+	for (i = 0; i <= 5; i++) {
+		mii_multi_chip_mode_write(bus,3, MVEBU_PORT_CTRL_SMI_ADDR(i),
+					  MVEBU_SW_PORT_CTRL_REG, 0x7f);
+	}
+
+	/* RGMII Delay on Port 0 (CPU port), force link to 1000Mbps */
+	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(0),
+				  MVEBU_SW_LINK_CTRL_REG, 0xe002);
+
+	/* Power up PHY 1, 2, 3, 4, 5 (through Global 2 registers) */
+	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
+				  MVEBU_G2_SMI_PHY_DATA_REG, 0x1140);
+	for (i = 1; i <= 5; i++) {
+		mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
+					  MVEBU_G2_SMI_PHY_CMD_REG, 0x9400 +
+					  (MVEBU_PORT_CTRL_SMI_ADDR(i) << 5));
+	}
+
+	/* change port#5 CMODE to SGMII mode (0xA) */
+	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(5),
+							  0x1A, 0xA100);
+	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(4),
+							  0x1A, 0xDEA0);
+	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(5),
+							  0x00, 0x000A);
+
+	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(5),
+							  0x1A, 0x0A02);
+	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(4),
+							  0x1A, 0xDEA2);
+
+	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
+							  MVEBU_G2_SMI_PHY_DATA_REG, 0x2000);
+	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
+							  MVEBU_G2_SMI_PHY_CMD_REG, 0x82A4);
+	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
+							  MVEBU_G2_SMI_PHY_DATA_REG, 0x1340);
+	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
+							  MVEBU_G2_SMI_PHY_CMD_REG, 0x86A4);
+	return 0;
+}
+
+/* Bring-up board-specific network stuff */
+int board_network_enable(struct mii_dev *bus)
+{
+	if (of_machine_is_compatible("marvell,armada-3720-espressobin")) {
+		return board_network_enable_espressobin(bus);
+	}
+
+	if (of_machine_is_compatible("gti,armada-3720-ccpe-r0")) {
+		return board_network_enable_ccpe(bus);
+	}
 	return 0;
 }
