@@ -8,6 +8,7 @@
 #include <dm.h>
 #include <i2c.h>
 #include <phy.h>
+#include <miiphy.h>
 #include <asm/io.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/soc.h>
@@ -61,6 +62,15 @@ enum COMPHY_LANE2_MUXING {
 /* Global 2 Registers */
 #define MVEBU_G2_SMI_PHY_CMD_REG	(24)
 #define MVEBU_G2_SMI_PHY_DATA_REG	(25)
+
+/* Marvell 88E1512 */
+#define MII_MARVELL_PHY_PAGE		22
+
+#define MV88E1512_GENERAL_CTRL		20
+#define MV88E1512_MODE_SGMII		1
+#define MV88E1512_RESET_OFFS		15
+
+#define CCPE_MV88E1512_PHYADDR		0x1
 
 /*
 * For Armada3700 A0 chip, comphy serdes lane 2 could be used as PHY for SATA
@@ -312,9 +322,38 @@ int board_network_enable_espressobin(struct mii_dev *bus)
 	return 0;
 }
 
+void force_phy_88e1512_sgmii_to_copper(u16 devaddr)
+{
+	const char *name;
+	u16 reg;
+
+	name = miiphy_get_current_dev();
+	if (name) {
+		/* SGMII-to-Copper mode initialization */
+
+		/* Select page 18 */
+		miiphy_write(name, devaddr, MII_MARVELL_PHY_PAGE, 0x12);
+		/* In reg 20, write MODE[2:0] = 0x1 (SGMII to Copper) */
+		miiphy_read(name, devaddr, MV88E1512_GENERAL_CTRL, &reg);
+		reg &= ~0x7;
+		reg |= MV88E1512_MODE_SGMII;
+		miiphy_write(name, devaddr, MV88E1512_GENERAL_CTRL, reg);
+		/* PHY reset is necessary after changing MODE[2:0] */
+		miiphy_read(name, devaddr, MV88E1512_GENERAL_CTRL, &reg);
+		reg |= 1 << MV88E1512_RESET_OFFS;
+		miiphy_write(name, devaddr, MV88E1512_GENERAL_CTRL, reg);
+		/* Reset page selection */
+		miiphy_write(name, devaddr, MII_MARVELL_PHY_PAGE, 0);
+		udelay(100);
+	}
+}
+
 int board_network_enable_ccpe(struct mii_dev *bus)
 {
 	int i;
+
+	/* setup 88e1512 SGMII-to-Copper mode */
+	force_phy_88e1512_sgmii_to_copper(CCPE_MV88E1512_PHYADDR);
 
 	/*
 	 * FIXME: remove this code once Topaz driver gets available
