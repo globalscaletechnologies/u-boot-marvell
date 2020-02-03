@@ -43,6 +43,7 @@ enum COMPHY_LANE2_MUXING {
 /* Ethernet switch registers */
 /* SMI addresses for multi-chip mode */
 #define MVEBU_PORT_CTRL_SMI_ADDR(p)	(16 + (p))
+#define MVEBU_SW_G1_SMI_ADDR		(27)
 #define MVEBU_SW_G2_SMI_ADDR		(28)
 
 /* Multi-chip mode */
@@ -403,6 +404,51 @@ int board_network_enable_ccpe(struct mii_dev *bus)
 	return 0;
 }
 
+int board_network_enable_axc300(struct mii_dev *bus)
+{
+	int i;
+
+	/*
+	 * FIXME: remove this code once Topaz driver gets available
+	 * A3720 axc300 Board Only
+	 * Configure Topaz switch (88E6341)
+	 * Set port 0,1,2,3,4 to forwarding Mode (through Switch Port registers)
+	 */
+	for (i = 0; i <= 5; i++) {
+		mii_multi_chip_mode_write(bus,3, MVEBU_PORT_CTRL_SMI_ADDR(i),
+					  MVEBU_SW_PORT_CTRL_REG, 0x7f);
+	}
+
+	/* Port 5 (CPU port), force link to 1000Mbps */
+	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(5),
+				  MVEBU_SW_LINK_CTRL_REG, 0x2002);
+
+	/* Power up PHY 0, 1, 2, 3, 4 (through Global 2 registers) */
+	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
+				  MVEBU_G2_SMI_PHY_DATA_REG, 0x1140);
+	for (i = 0; i < 5; i++) {
+		mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
+					  MVEBU_G2_SMI_PHY_CMD_REG, 0x9400 +
+					  (MVEBU_PORT_CTRL_SMI_ADDR(i) << 5));
+	}
+
+	/* Map switch port to external phy address */
+	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
+							  MVEBU_G2_SMI_PHY_DATA_REG, 0);
+	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
+							  MVEBU_G2_SMI_PHY_CMD_REG, 0xC400 | 0x10);
+	/* Reset PPU */
+	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G1_SMI_ADDR, 0x04, 0x1);
+	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(5),
+							  0x1A, 0xA42E);
+	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(4),
+							  0x1A, 0xC1E6);
+	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G1_SMI_ADDR,
+							  0x04, 0x4001);
+
+	return 0;
+}
+
 /* Bring-up board-specific network stuff */
 int board_network_enable(struct mii_dev *bus)
 {
@@ -412,6 +458,10 @@ int board_network_enable(struct mii_dev *bus)
 
 	if (of_machine_is_compatible("gti,armada-3720-ccpe-r0")) {
 		return board_network_enable_ccpe(bus);
+	}
+
+	if (of_machine_is_compatible("gti,armada-3720-axc300-v3")) {
+		return board_network_enable_axc300(bus);
 	}
 	return 0;
 }
