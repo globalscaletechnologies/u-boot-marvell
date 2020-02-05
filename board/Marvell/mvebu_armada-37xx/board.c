@@ -10,6 +10,7 @@
 #include <phy.h>
 #include <miiphy.h>
 #include <asm/io.h>
+#include <asm/gpio.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/soc.h>
 #include <power/regulator.h>
@@ -140,6 +141,28 @@ int board_early_init_f(void)
 	return 0;
 }
 
+int gpio_reset_n(char *name, char *alias, int delay)
+{
+#ifdef CONFIG_DM_GPIO
+	struct gpio_desc desc;
+	int ret;
+
+	ret = dm_gpio_lookup_name(name, &desc);
+	if (ret)
+		return ret;
+
+	ret = dm_gpio_request(&desc, alias);
+	if (ret)
+		return ret;
+	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT);
+	dm_gpio_set_value(&desc, 0);
+	udelay(delay);
+	dm_gpio_set_value(&desc, 1);
+
+#endif /* CONFIG_DM_GPIO */
+	return 0;
+}
+
 int board_init(void)
 {
 	/* adress of boot parameters */
@@ -151,6 +174,10 @@ int board_init(void)
 	/* enable serdes lane 2 mux for sata phy */
 	board_comphy_usb3_sata_mux(COMPHY_LANE2_MUX_SATA);
 
+	if (of_machine_is_compatible("gti,armada-3720-ccpe-r0")) {
+		/* reset wifi chip */
+		gpio_reset_n("GPIO14", "WIFI_PWR_Dn", 5000);
+	}
 	return 0;
 }
 
