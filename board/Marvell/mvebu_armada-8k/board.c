@@ -8,6 +8,7 @@
 #include <dm.h>
 #include <i2c.h>
 #include <asm/io.h>
+#include <asm/gpio.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/soc.h>
 #include <power/regulator.h>
@@ -76,5 +77,30 @@ int board_late_init(void)
 					CP_USB20_TX_OUT_AMPL_VALUE);
 	}
 
+	return 0;
+}
+
+/* Board specific AHCI / SATA enable code */
+int board_ahci_enable(void)
+{
+	if (of_machine_is_compatible("marvell,armada7040-mochabin")) {
+#ifdef CONFIG_DM_GPIO
+		struct gpio_desc desc;
+		int ret;
+
+		ret = dm_gpio_lookup_name("C2", &desc);
+		if (ret) {
+			printf("can't get GPIO1_34\n");
+			return ret;
+		}
+
+		ret = dm_gpio_request(&desc, "m.2 devslp");
+		if (ret)
+			return ret;
+		dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT);
+		dm_gpio_set_value(&desc, 0);
+#endif /* CONFIG_DM_GPIO */
+		return 0;
+	}
 	return 0;
 }

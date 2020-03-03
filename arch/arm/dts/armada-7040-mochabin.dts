@@ -1,0 +1,368 @@
+/*
+ * Copyright (C) 2016 Marvell Technology Group Ltd.
+ *
+ * This file is dual-licensed: you can use it either under the terms
+ * of the GPLv2 or the X11 license, at your option. Note that this dual
+ * licensing only applies to this file, and not this project as a
+ * whole.
+ *
+ *  a) This library is free software; you can redistribute it and/or
+ *     modify it under the terms of the GNU General Public License as
+ *     published by the Free Software Foundation; either version 2 of the
+ *     License, or (at your option) any later version.
+ *
+ *     This library is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ * Or, alternatively,
+ *
+ *  b) Permission is hereby granted, free of charge, to any person
+ *     obtaining a copy of this software and associated documentation
+ *     files (the "Software"), to deal in the Software without
+ *     restriction, including without limitation the rights to use,
+ *     copy, modify, merge, publish, distribute, sublicense, and/or
+ *     sell copies of the Software, and to permit persons to whom the
+ *     Software is furnished to do so, subject to the following
+ *     conditions:
+ *
+ *     The above copyright notice and this permission notice shall be
+ *     included in all copies or substantial portions of the Software.
+ *
+ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ *     OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+#include "armada-70x0.dtsi"
+
+#define CP110_NUM				0
+#define SPI_DIRECT_BASE				(0xf9000000)
+
+/ {
+	model = "Marvell Armada 7040 Mochabin development board";
+	compatible = "marvell,armada7040-mochabin", "marvell,armada7040",
+				 "marvell,armada-ap806-quad", "marvell,armada-ap806";
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	aliases {
+		i2c0 = &cp0_i2c0;
+		i2c1 = &cp0_i2c1;
+		spi0 = &cp0_spi1;
+		spi1 = &cp0_spi0;
+		fuse0 = &ap_hd_efuse0;
+		fuse1 = &ap_ld_efuse0;
+		fuse2 = &ap_ld_efuse1;
+		fuse3 = &cp0_ld_efuse0;
+		fuse4 = &cp0_ld_efuse1;
+		gpio0 = &ap_gpio0;
+		gpio1 = &cp0_gpio0;
+		gpio2 = &cp0_gpio1;
+	};
+
+	memory@00000000 {
+		device_type = "memory";
+		reg = <0x0 0x0 0x0 0x80000000>;
+	};
+
+	cp0 {
+		config-space {
+			ranges = <0x0 U64_TO_U32_H(CP110_BASE)
+					  U64_TO_U32_L(CP110_BASE) 0x2000000>,	/* internal regs */
+					 <0x2000000 U64_TO_U32_H(SPI_DIRECT_BASE)
+					 U64_TO_U32_L(SPI_DIRECT_BASE) 0x1000000>;	/* SPI1-DEV0 */
+		};
+	};
+};
+
+&ap_pinctl {
+	   /* MPP Bus:
+	    * EMMC  [0-5]
+	    * UART0 [11,19]
+	    */
+			  /* 0 1 2 3 4 5 6 7 8 9 */
+	pin-func = < 1 1 1 1 1 1 0 0 0 0
+				 0 3 0 0 0 0 0 0 0 3 >;
+};
+
+/* eMMC */
+&ap_sdhci0 {
+	status = "okay";
+	bus-width = <4>;
+	no-1-8-v;
+	non-removable;
+};
+
+/* for debug-uart console */
+&uart0 {
+	status = "okay";
+};
+
+&ap_hd_efuse0 {
+	status = "okay";
+};
+
+&ap_ld_efuse0 {
+	status = "okay";
+};
+
+&ap_ld_efuse1 {
+	status = "okay";
+};
+
+&cp0_pinctl {
+		/* MPP Bus:
+		 * E6341_RSTn        [0]
+		 * E6341_INT         [1]
+		 * I2C1              [2,3]
+		 * PCIE1_CLKREQn     [5]
+		 * UART0             [6,7]
+		 * PCIE1_WAKEn       [8]
+		 * PCIE_RSTOUTn      [9]  (GPIO)
+		 * PCIE2_WAKEn       [10]
+		 * PHY0_RSTn         [12] (88e1512-rst)
+		 * SPI1              [13-16]
+		 * PHY0_INT          [24] (88e1512-int)
+		 * 9554_INT          [27] (ioexp-int)
+		 * PCIE2_CLKREQn     [28]
+		 * IS_CLK_VBM        [29] (is31fl3199-clk-vbm)
+		 * IS_SDB            [30] (is31fl3199-sdb)
+		 * MKR_PWM           [31] (mikroBus-pwm)
+		 * MKR_INT           [32] (mikroBus-int)
+		 * MKR_RST           [33] (mikroBus-rst)
+		 * DEVSLP            [34] (m.2-sata-devslp)
+		 * SMI               [35,36]
+		 * I2C0              [37,38]
+		 * RGMII2            [44-55]
+		 * SPI0              [56-59]
+		 * GPIO              [4,11,17-23,25-26]
+		 */
+			/*   0   1   2   3   4   5   6   7   8   9 */
+	pin-func = < 0   0   7   7   0   7   8   8   0   0
+				 0   0   0   3   3   3   3   0   0   0
+				 0   0   0   0   0   0   0   0   6   0
+				 0   0   0   0   0   8   8   2   2   0
+				 0   0   0   0   1   1   1   1   1   1
+				 1   1   1   1   1   1   6   6   6   6
+				 0   0   0 >;
+
+	cp0_i2c1_pins: cp0-i2c-pins-1 {
+		marvell,pins = < 2 3 >;
+		marvell,function = <7>;
+	};
+
+	cp0_spi0_pins: cp0-spi-pins-0 {
+		marvell,pins = < 56 57 58 59 >;
+		marvell,function = <6>;
+	};
+
+	cp0_spi1_pins: cp0-spi-pins-1 {
+		marvell,pins = < 13 14 15 16 >;
+		marvell,function = <3>;
+	};
+
+	cp0_smi_pins: cp0-smi-pins {
+		marvell,pins = < 35 36 >;
+		marvell,function = <8>;
+	};
+};
+
+/* for mikroBUS, SFP, pca9554-io-exp */
+&cp0_i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_i2c0_pins>;
+	status = "okay";
+	clock-frequency = <100000>;
+
+	/*
+	 * PCA9554 GPIO expander
+	 *  0-SFP+_TX_FAULT
+	 *  1-SFP+_TX_DISABLE
+	 *  2-SFP+_PRSNT
+	 *  3-SFP+_LOSS
+	 *  4-SFP_TX_FAULT
+	 *  5-SFP_TX_DISABLE
+	 *  6-SFP_PRSNT
+	 *  7-SFP_LOSS
+	 */
+	expander0: pca953x@39 {
+		compatible = "nxp,pca9554";
+		#gpio-cells = <2>;
+		reg = <0x39>;
+		status = "okay";
+	};
+};
+
+/* for IS31FL3199, mini-PCIe, SFP+ */
+&cp0_i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_i2c1_pins>;
+	status = "okay";
+	clock-frequency = <100000>;
+};
+
+/* for mikroBUS */
+&cp0_spi0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_spi0_pins>;
+	status = "okay";
+};
+
+/* for SPI Flash */
+&cp0_spi1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_spi1_pins>;
+	reg = <0x700680 0x50>,			/* control */
+	      <0x2000000 0x1000000>,	/* CS0 */
+	      <0 0xffffffff>,			/* CS1 */
+	      <0 0xffffffff>,			/* CS2 */
+	      <0 0xffffffff>;			/* CS3 */
+	status = "okay";
+
+	spi-flash@0 {
+		#address-cells = <0x1>;
+		#size-cells = <0x1>;
+		compatible = "jedec,spi-nor", "spi-flash";
+		reg = <0x0>;
+		spi-max-frequency = <108000000>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "u-boot";
+				reg = <0x0 0x3F0000>;
+			};
+			partition@3F0000 {
+				label = "u-boot-env";
+				reg = <0x3F0000 0x10000>;
+			};
+			partition@400000 {
+				label = "data";
+				reg = <0x400000 0xC00000>;
+			};
+		};
+	};
+};
+
+&cp0_ld_efuse0 {
+	status = "okay";
+};
+
+&cp0_ld_efuse1 {
+	status = "okay";
+};
+
+&cp0_comphy {
+	phy0 {
+		phy-type = <COMPHY_TYPE_SGMII1>;
+		phy-speed = <COMPHY_SPEED_3_125G>;
+	};
+
+	phy1 {
+		phy-type = <COMPHY_TYPE_USB3_HOST0>;
+	};
+
+	phy2 {
+		phy-type = <COMPHY_TYPE_SFI0>;
+		phy-speed = <COMPHY_SPEED_10_3125G>;
+	};
+
+	phy3 {
+		phy-type = <COMPHY_TYPE_SATA1>;
+	};
+
+	phy4 {
+		phy-type = <COMPHY_TYPE_PEX1>;
+	};
+
+	phy5 {
+		phy-type = <COMPHY_TYPE_PEX2>;
+	};
+};
+
+/* m.2 sata */
+&cp0_sata0 {
+	status = "okay";
+};
+
+/* for USB3 HUB */
+&cp0_usb3_0 {
+	status = "okay";
+};
+
+&cp0_usb3_1 {
+	status = "okay";
+};
+
+&cp0_utmi0 {
+	status = "okay";
+};
+
+/* connect to mini-pcie#1(J5) */
+&cp0_utmi1 {
+	status = "okay";
+};
+
+/* mini-pcie#1 (J5) */
+&cp0_pcie1 {
+	status = "okay";
+	marvell,reset-gpio = <&cp0_gpio0 9 GPIO_ACTIVE_HIGH>;
+};
+
+/* PCIex1 (J24) */
+&cp0_pcie2 {
+	status = "okay";
+};
+
+&cp0_mdio {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_smi_pins>;
+	status = "okay";
+
+	/* for 88e1512 phy */
+	ethphy0: ethernet-phy@0 {
+		reg = <1>;
+	};
+};
+
+&cp0_ethernet {
+	status = "okay";
+};
+
+/* for 10G SFP+ : SerDes#2 */
+&cp0_eth0 {
+	status = "okay";
+	phy-mode = "sfi";
+	marvell,sfp-tx-disable-gpio = <&expander0 1 GPIO_ACTIVE_HIGH>;
+};
+
+/* for Topaz 88e6341 : SerDes#0 */
+&cp0_eth1 {
+	status = "okay";
+	phy-mode = "sgmii";
+	phy-speed = <2500>;
+	phy-reset-gpios = <&cp0_gpio0 0 GPIO_ACTIVE_HIGH>;
+};
+
+/* for 88e1512 phy (RJ45 + SFP) : RGMII#2 */
+&cp0_eth2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_ge2_rgmii_pins>;
+	status = "okay";
+	phy-mode = "rgmii-id";
+	phy = <&ethphy0>;
+	marvell,sfp-tx-disable-gpio = <&expander0 5 GPIO_ACTIVE_HIGH>;
+	phy-reset-gpios = <&cp0_gpio0 12 GPIO_ACTIVE_HIGH>;
+};
