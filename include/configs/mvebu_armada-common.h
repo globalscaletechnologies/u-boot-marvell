@@ -34,6 +34,21 @@
 #define CONFIG_ETHPRIME			"eth0"
 #define CONFIG_ROOTPATH                 "/srv/nfs/" /* Default Dir for NFS */
 #define CONFIG_ENV_OVERWRITE		/* ethaddr can be reprogrammed */
+
+#if defined(CONFIG_TARGET_MVEBU_ARMADA_37XX)
+#define ETHADDR			"ethaddr=00:51:82:11:22:00\0"	\
+						"eth1addr=00:51:82:11:22:01\0"
+#elif defined(CONFIG_TARGET_MVEBU_ARMADA_8K)
+#define ETHADDR			"ethaddr=00:51:82:11:22:00\0"	\
+						"eth1addr=00:51:82:11:22:01\0"	\
+						"eth2addr=00:51:82:11:22:02\0"
+#else
+#define ETHADDR			"ethaddr=00:51:82:11:22:00\0"	\
+						"eth1addr=00:51:82:11:22:01\0"	\
+						"eth2addr=00:51:82:11:22:02\0"	\
+						"eth3addr=00:51:82:11:22:03\0"
+#endif
+
 #define CONFIG_EXTRA_ENV_SETTINGS	"bootcmd=run get_images; " \
 						"run set_bootargs; " \
 						"booti $kernel_addr_r " \
@@ -51,10 +66,7 @@
 					"ramfs_name=-\0"		\
 					"fdt_name=fdt.dtb\0"		\
 					"netdev=eth0\0"			\
-					"ethaddr=00:51:82:11:22:00\0"	\
-					"eth1addr=00:51:82:11:22:01\0"	\
-					"eth2addr=00:51:82:11:22:02\0"	\
-					"eth3addr=00:51:82:11:22:03\0"	\
+					ETHADDR	\
 					"image_name=Image\0"		\
 					"get_ramfs=if test \"${ramfs_name}\"" \
 						" != \"-\"; then setenv " \
