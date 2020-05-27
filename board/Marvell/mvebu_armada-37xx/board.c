@@ -383,51 +383,6 @@ int board_network_enable_ccpe(struct mii_dev *bus)
 	/* setup 88e1512 SGMII-to-Copper mode */
 	force_phy_88e1512_sgmii_to_copper(CCPE_MV88E1512_PHYADDR);
 
-	/*
-	 * FIXME: remove this code once Topaz driver gets available
-	 * A3720 CCPE Board Only
-	 * Configure Topaz switch (88E6341)
-	 * Set port 1,2,3,4,5 to forwarding Mode (through Switch Port registers)
-	 */
-	for (i = 0; i <= 5; i++) {
-		mii_multi_chip_mode_write(bus,3, MVEBU_PORT_CTRL_SMI_ADDR(i),
-					  MVEBU_SW_PORT_CTRL_REG, 0x7f);
-	}
-
-	/* RGMII Delay on Port 0 (CPU port), force link to 1000Mbps */
-	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(0),
-				  MVEBU_SW_LINK_CTRL_REG, 0xe002);
-
-	/* Power up PHY 1, 2, 3, 4, 5 (through Global 2 registers) */
-	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
-				  MVEBU_G2_SMI_PHY_DATA_REG, 0x1140);
-	for (i = 1; i <= 5; i++) {
-		mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
-					  MVEBU_G2_SMI_PHY_CMD_REG, 0x9400 +
-					  (MVEBU_PORT_CTRL_SMI_ADDR(i) << 5));
-	}
-
-	/* change port#5 CMODE to SGMII mode (0xA) */
-	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(5),
-							  0x1A, 0xA100);
-	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(4),
-							  0x1A, 0xDEA0);
-	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(5),
-							  0x00, 0x000A);
-
-	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(5),
-							  0x1A, 0x0A02);
-	mii_multi_chip_mode_write(bus, 3, MVEBU_PORT_CTRL_SMI_ADDR(4),
-							  0x1A, 0xDEA2);
-
-	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
-							  MVEBU_G2_SMI_PHY_DATA_REG, 0x2000);
-	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
-							  MVEBU_G2_SMI_PHY_CMD_REG, 0x82A4);
-	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
-							  MVEBU_G2_SMI_PHY_DATA_REG, 0x1340);
-	mii_multi_chip_mode_write(bus, 3, MVEBU_SW_G2_SMI_ADDR,
-							  MVEBU_G2_SMI_PHY_CMD_REG, 0x86A4);
 	return 0;
 }
 
