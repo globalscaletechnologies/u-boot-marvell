@@ -378,8 +378,6 @@ void force_phy_88e1512_sgmii_to_copper(u16 devaddr)
 
 int board_network_enable_ccpe(struct mii_dev *bus)
 {
-	int i;
-
 	/* setup 88e1512 SGMII-to-Copper mode */
 	force_phy_88e1512_sgmii_to_copper(CCPE_MV88E1512_PHYADDR);
 
